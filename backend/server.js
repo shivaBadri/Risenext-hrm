@@ -1,5 +1,6 @@
 // server.js — Rise Next HRM Portal Backend
 require('dotenv').config();
+const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
@@ -26,7 +27,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected ✅"))
-.catch(err => console.log(err));
+.catch(err => console.log(err));   
 
 // ── API Routes ──────────────────────────────────────────────────────────
 app.use('/api/auth',          require('./routes/auth'));
