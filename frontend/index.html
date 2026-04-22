@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rise Next — HRM Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --brand: #1a3a5c;
+  --brand-light: #224e7a;
+  --accent: #e8a020;
+  --accent-light: #fef3e0;
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --border: #e4e6ea;
+  --border2: #d0d3d9;
+  --text: #1c2030;
+  --muted: #6b7385;
+  --success: #2e7d46;
+  --success-bg: #e6f4ec;
+  --warn: #b86e00;
+  --warn-bg: #fef3e0;
+  --danger: #b03030;
+  --danger-bg: #fce8e8;
+  --info: #1558a0;
+  --info-bg: #e4f0fb;
+  --sidebar-w: 224px;
+  --topbar-h: 56px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c8cbd2;border-radius:10px}
+
+/* ═══════════════════════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════════════════════ */
+#login-page {
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; background:linear-gradient(135deg,#1a3a5c 0%,#0e6b7c 100%);
+}
+.login-card {
+  background:var(--card); border-radius:16px; padding:40px 44px;
+  width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.login-logo { font-family:'Playfair Display',serif; font-size:26px; color:var(--brand); margin-bottom:4px }
+.login-sub { font-size:13px; color:var(--muted); margin-bottom:28px }
+.login-card label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:5px }
+.login-card input {
+  width:100%; border:1.5px solid var(--border2); border-radius:8px;
+  padding:10px 14px; font-size:14px; outline:none; transition:border 0.15s;
+  margin-bottom:16px; background:#fafbfc;
+}
+.login-card input:focus { border-color:var(--brand) }
+.login-btn {
+  width:100%; background:var(--brand); color:#fff; border:none;
+  border-radius:8px; padding:12px; font-size:15px; font-weight:500;
+  transition:background 0.15s; margin-top:4px;
+}
+.login-btn:hover { background:var(--brand-light) }
+.login-error { color:var(--danger); font-size:12px; margin-top:-10px; margin-bottom:12px; display:none }
+.login-hint { font-size:12px; color:var(--muted); text-align:center; margin-top:16px }
+
+/* ═══════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════ */
+#app { display:flex; height:100vh; overflow:hidden }
+#app.hidden { display:none }
+
+/* SIDEBAR */
+.sidebar {
+  width:var(--sidebar-w); flex-shrink:0; background:var(--brand);
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.logo-area { padding:20px 18px 16px; border-bottom:1px solid rgba(255,255,255,0.1) }
+.logo-name { font-family:'Playfair Display',serif; font-size:18px; color:#fff }
+.logo-sub { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-top:2px }
+.nav { flex:1; padding:10px 0 }
+.nav-section { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.3); padding:10px 18px 4px }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 18px;
+  color:rgba(255,255,255,0.7); font-size:13px; border-left:3px solid transparent;
+  cursor:pointer; transition:all 0.15s; border-right:none; background:none; border-top:none; border-bottom:none; width:100%; text-align:left;
+}
+.nav-item:hover { color:#fff; background:rgba(255,255,255,0.07) }
+.nav-item.active { color:#fff; background:rgba(255,255,255,0.12); border-left-color:var(--accent) }
+.nav-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0 }
+.sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,0.1) }
+.sidebar-user { display:flex; align-items:center; gap:10px }
+.user-avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex-shrink:0 }
+.user-name { font-size:12px; color:#fff; font-weight:500 }
+.user-role { font-size:11px; color:rgba(255,255,255,0.5) }
+.logout-btn { background:none; border:none; color:rgba(255,255,255,0.5); font-size:11px; cursor:pointer; margin-top:6px; padding:0; font-family:inherit }
+.logout-btn:hover { color:#fff }
+
+/* MAIN */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0 }
+.topbar {
+  height:var(--topbar-h); background:var(--card); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 24px; gap:16px; flex-shrink:0;
+}
+.page-title { font-size:16px; font-weight:500 }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px }
+.topbar-date { font-size:12px; color:var(--muted) }
+.content { flex:1; overflow-y:auto; padding:24px }
+
+/* ═══════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════ */
+.page { display:none }
+.page.active { display:block }
+
+/* ═══════════════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════════════ */
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin-bottom:16px }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px }
+.card-title { font-size:14px; font-weight:500 }
+
+/* Stats */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow) }
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px }
+.stat-val { font-size:26px; font-weight:600; line-height:1; color:var(--text) }
+.stat-sub { font-size:12px; color:var(--muted); margin-top:4px }
+
+/* Two col */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px }
+
+/* Table */
+table { width:100%; border-collapse:collapse; font-size:13px }
+th { text-align:left; font-weight:500; color:var(--muted); padding:6px 10px; border-bottom:1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.5px }
+td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle }
+tr:last-child td { border-bottom:none }
+tbody tr:hover td { background:#fafbfc }
+
+/* Pills */
+.pill { display:inline-flex; align-items:center; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:500 }
+.pill-green { background:var(--success-bg); color:var(--success) }
+.pill-red { background:var(--danger-bg); color:var(--danger) }
+.pill-amber { background:var(--warn-bg); color:var(--warn) }
+.pill-blue { background:var(--info-bg); color:var(--info) }
+.pill-gray { background:#f0f1f3; color:var(--muted) }
+
+/* Employee avatar */
+.emp-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff; flex-shrink:0 }
+.emp-row { display:flex; align-items:center; gap:10px }
+.emp-name { font-weight:500 }
+.emp-email { font-size:11px; color:var(--muted) }
+
+/* Buttons */
+.btn { font-size:13px; padding:7px 14px; border-radius:7px; border:1px solid var(--border2); background:transparent; color:var(--text); cursor:pointer; font-family:inherit; transition:all 0.12s; font-weight:400 }
+.btn:hover { background:var(--bg) }
+.btn-sm { font-size:12px; padding:5px 11px; border-radius:6px; border:1px solid var(--border2); background:transparent; color:var(--text); cursor:pointer; font-family:inherit }
+.btn-sm:hover { background:var(--bg) }
+.btn-primary { background:var(--brand); color:#fff; border-color:var(--brand) }
+.btn-primary:hover { background:var(--brand-light) }
+.btn-success { color:var(--success); border-color:var(--success) }
+.btn-danger { color:var(--danger); border-color:var(--danger) }
+.btn-success:hover { background:var(--success-bg) }
+.btn-danger:hover { background:var(--danger-bg) }
+
+/* Form */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px }
+.form-group { display:flex; flex-direction:column; gap:5px }
+.form-group label { font-size:12px; color:var(--muted); font-weight:500 }
+.form-group input, .form-group select, .form-group textarea {
+  border:1px solid var(--border2); border-radius:8px; padding:8px 12px;
+  font-size:13px; font-family:inherit; background:#fafbfc; color:var(--text); outline:none; transition:border 0.15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--brand); background:#fff }
+.full-width { grid-column:1/-1 }
+.form-actions { display:flex; gap:10px; grid-column:1/-1; margin-top:4px }
+
+/* Progress bar */
+.bar-wrap { background:var(--border); border-radius:6px; height:5px; flex:1 }
+.bar { height:5px; border-radius:6px }
+
+/* Dots */
+.dot { width:8px; height:8px; border-radius:50%; flex-shrink:0 }
+
+/* Today items */
+.today-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border) }
+.today-item:last-child { border-bottom:none }
+
+/* Announce */
+.announce-item { padding:10px 0; border-bottom:1px solid var(--border) }
+.announce-item:last-child { border-bottom:none }
+.announce-date { font-size:11px; color:var(--muted) }
+.announce-title { font-size:13px; font-weight:500; margin:2px 0 }
+.announce-body { font-size:12px; color:var(--muted); line-height:1.55 }
+
+/* Attendance calendar */
+.att-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px }
+.att-day { border-radius:6px; padding:7px 4px; text-align:center; font-size:12px; color:var(--muted) }
+.att-day .day-num { font-weight:500 }
+.att-day .day-lbl { font-size:9px; font-weight:600; margin-top:1px }
+.att-present { background:var(--success-bg); color:var(--success) }
+.att-absent { background:var(--danger-bg); color:var(--danger) }
+.att-leave { background:var(--warn-bg); color:var(--warn) }
+.att-wfh { background:var(--info-bg); color:var(--info) }
+.att-weekend { background:#f0f1f3; opacity:0.5 }
+.att-future { background:#f0f1f3; opacity:0.3 }
+
+/* Payslip */
+.payslip-header { background:var(--brand); color:#fff; border-radius:8px; padding:16px; margin-bottom:14px }
+.payslip-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:13px }
+.payslip-total { display:flex; justify-content:space-between; padding:10px 0; font-size:15px; font-weight:600; color:var(--brand) }
+
+/* Legend */
+.legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--muted) }
+
+/* Loading spinner */
+.spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--brand); border-radius:50%; animation:spin 0.7s linear infinite }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+/* Modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:opacity 0.2s }
+.modal-overlay.open { opacity:1; pointer-events:all }
+.modal { background:var(--card); border-radius:14px; padding:28px; width:100%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.2); transform:translateY(10px); transition:transform 0.2s }
+.modal-overlay.open .modal { transform:translateY(0) }
+.modal-title { font-size:16px; font-weight:600; margin-bottom:20px }
+.modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); float:right; margin-top:-4px }
+
+/* Toast */
+.toast-container { position:fixed; top:16px; right:16px; z-index:2000; display:flex; flex-direction:column; gap:8px }
+.toast { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 16px; font-size:13px; box-shadow:var(--shadow); display:flex; align-items:center; gap:8px; min-width:240px; animation:slideIn 0.25s ease }
+@keyframes slideIn { from { transform:translateX(100%); opacity:0 } to { transform:translateX(0); opacity:1 } }
+.toast-success { border-left:3px solid var(--success) }
+.toast-error { border-left:3px solid var(--danger) }
+.toast-info { border-left:3px solid var(--brand) }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">Rise Next</div>
+    <div class="login-sub">HR Management Portal</div>
+    <label>Email Address</label>
+    <input type="email" id="login-email" value="admin@risenext.com" placeholder="admin@risenext.com" />
+    <label>Password</label>
+    <input type="password" id="login-pass" value="admin@123" placeholder="••••••••" />
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">Sign in to Portal</button>
+    <div class="login-hint">Default: admin@risenext.com / admin@123</div>
+  </div>
+</div>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app" class="hidden">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-name">Rise Next</div>
+      <div class="logo-sub">HR Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <button class="nav-item active" onclick="goto('dashboard',this)"><span class="nav-icon">⬛</span>Dashboard</button>
+      <div class="nav-section">People</div>
+      <button class="nav-item" onclick="goto('employees',this)"><span class="nav-icon">👤</span>Employees</button>
+      <button class="nav-item" onclick="goto('recruitment',this)"><span class="nav-icon">📋</span>Recruitment</button>
+      <div class="nav-section">Time & Leave</div>
+      <button class="nav-item" onclick="goto('attendance',this)"><span class="nav-icon">🕐</span>Attendance</button>
+      <button class="nav-item" onclick="goto('leave',this)"><span class="nav-icon">📅</span>Leave</button>
+      <div class="nav-section">Finance</div>
+      <button class="nav-item" onclick="goto('payroll',this)"><span class="nav-icon">💰</span>Payroll</button>
+      <div class="nav-section">Comms</div>
+      <button class="nav-item" onclick="goto('announcements',this)"><span class="nav-icon">📢</span>Announcements</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar">HR</div>
+        <div>
+          <div class="user-name" id="sidebar-name">HR Admin</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="topbar-date" id="topbar-date"></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ════════ DASHBOARD ════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats">
+          <div class="stat-card"><div class="stat-label">Total Employees</div><div class="stat-val" id="ds-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">Present Today</div><div class="stat-val" id="ds-present">—</div></div>
+          <div class="stat-card"><div class="stat-label">On Leave</div><div class="stat-val" id="ds-leave">—</div><div class="stat-sub" id="ds-pending"></div></div>
+          <div class="stat-card"><div class="stat-label">Monthly Payroll</div><div class="stat-val" id="ds-payroll" style="font-size:20px">—</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Team — Rise Next Office</div>
+              <button class="btn-sm" onclick="goto('employees',document.querySelector('[onclick*=employees]'))">View all</button>
+            </div>
+            <table>
+              <thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Status</th></tr></thead>
+              <tbody id="dash-employees"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Leave Approvals Pending</div><span class="pill pill-amber" id="pending-count-badge">0 pending</span></div>
+            <table>
+              <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Action</th></tr></thead>
+              <tbody id="dash-leaves"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Department Headcount</div></div>
+          <table>
+            <thead><tr><th>Department</th><th>Employees</th><th>Share</th></tr></thead>
+            <tbody id="dash-depts"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ EMPLOYEES ════════ -->
+      <div class="page" id="page-employees">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="display:flex;gap:10px">
+            <select id="filter-dept" onchange="loadEmployees()" class="btn">
+              <option value="">All Departments</option>
+              <option>IT</option><option>AR</option>
+            </select>
+            <select id="filter-status" onchange="loadEmployees()" class="btn">
+              <option value="">All Status</option>
+              <option>Active</option><option>Probation</option><option>Notice Period</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Employee</th><th>ID</th><th>Department</th><th>Role</th><th>Salary</th><th>Status</th><th></th></tr></thead>
+            <tbody id="emp-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ RECRUITMENT ════════ -->
+      <div class="page" id="page-recruitment">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-label">Open Roles</div><div class="stat-val" id="rec-open">—</div></div>
+          <div class="stat-card"><div class="stat-label">Total Applicants</div><div class="stat-val" id="rec-apps">—</div></div>
+          <div class="stat-card"><div class="stat-label">Active Jobs</div><div class="stat-val" id="rec-active">—</div></div>
+          <div class="stat-card"><div class="stat-label">Drafts</div><div class="stat-val" id="rec-draft">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Job Openings</div><button class="btn-sm btn-primary" onclick="openJobModal()">+ Post New Job</button></div>
+          <table>
+            <thead><tr><th>Role</th><th>Department</th><th>Location</th><th>Applicants</th><th>Stage</th><th>Status</th><th></th></tr></thead>
+            <tbody id="jobs-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ ATTENDANCE ════════ -->
+      <div class="page" id="page-attendance">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">April 2026 Calendar</div>
+              <select id="att-emp-select" onchange="loadAttendanceCalendar()" class="btn-sm" style="font-size:12px"></select>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="dot" style="background:var(--success)"></div>Present</div>
+              <div class="legend-item"><div class="dot" style="background:var(--danger)"></div>Absent</div>
+              <div class="legend-item"><div class="dot" style="background:var(--warn)"></div>Leave</div>
+              <div class="legend-item"><div class="dot" style="background:var(--info)"></div>WFH</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:10px;color:var(--muted);margin-bottom:4px;gap:5px">
+              <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+            </div>
+            <div class="att-grid" id="att-calendar"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Today's Attendance</div><span class="pill pill-blue" id="att-today-date"></span></div>
+            <table>
+              <thead><tr><th>Employee</th><th>Check-in</th><th>Check-out</th><th>Status</th></tr></thead>
+              <tbody id="att-today-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ LEAVE ════════ -->
+      <div class="page" id="page-leave">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Apply for Leave</div></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Employee</label><select id="leave-emp"></select></div>
+              <div class="form-group"><label>Leave Type</label>
+                <select id="leave-type">
+                  <option>Casual Leave</option><option>Sick Leave</option><option>Earned Leave</option><option>LOP</option>
+                </select>
+              </div>
+              <div class="form-group"><label>From Date</label><input type="date" id="leave-from" /></div>
+              <div class="form-group"><label>To Date</label><input type="date" id="leave-to" /></div>
+              <div class="form-group full-width"><label>Reason</label><textarea id="leave-reason" rows="3" style="resize:none;width:100%"></textarea></div>
+              <div class="form-actions">
+                <button class="btn btn-primary" onclick="submitLeave()">Submit Request</button>
+                <button class="btn" onclick="clearLeaveForm()">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Leave Balance</div>
+              <select id="leave-bal-emp" onchange="loadLeaveBalance()" class="btn-sm" style="font-size:12px"></select>
+            </div>
+            <table>
+              <thead><tr><th>Leave Type</th><th>Total</th><th>Used</th><th>Balance</th></tr></thead>
+              <tbody id="leave-balance-table">
+                <tr><td>Casual Leave</td><td>12</td><td>2</td><td style="color:var(--success);font-weight:500">10</td></tr>
+                <tr><td>Sick Leave</td><td>10</td><td>0</td><td style="color:var(--success);font-weight:500">10</td></tr>
+                <tr><td>Earned Leave</td><td>18</td><td>2</td><td style="color:var(--success);font-weight:500">16</td></tr>
+                <tr><td>Optional Holiday</td><td>3</td><td>1</td><td style="color:var(--warn);font-weight:500">2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Leave History</div>
+            <div style="display:flex;gap:8px">
+              <select id="leave-hist-status" onchange="loadLeaves()" class="btn-sm">
+                <option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="leave-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ PAYROLL ════════ -->
+      <div class="page" id="page-payroll">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Payslip Viewer</div>
+              <select id="payroll-emp-select" onchange="loadPayslip()" class="btn-sm" style="font-size:12px"></select>
+            </div>
+            <div id="payslip-content">
+              <div style="text-align:center;padding:30px;color:var(--muted)">Select employee to view payslip</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Payroll Summary — April 2026</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+              <div class="stat-card"><div class="stat-label">Total Payroll</div><div class="stat-val" id="pr-total" style="font-size:19px">—</div></div>
+              <div class="stat-card"><div class="stat-label">Net Disbursed</div><div class="stat-val" id="pr-net" style="font-size:19px">—</div></div>
+            </div>
+            <table>
+              <thead><tr><th>Employee</th><th>Role</th><th>Dept</th><th>Gross</th><th>Net Pay</th><th>Status</th></tr></thead>
+              <tbody id="payroll-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ANNOUNCEMENTS ════════ -->
+      <div class="page" id="page-announcements">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Announcements</div><button class="btn-sm btn-primary" onclick="openAnnModal()">+ Post</button></div>
+            <div id="ann-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Company Holidays 2026</div></div>
+            <table>
+              <thead><tr><th>Date</th><th>Holiday</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td>14 Apr</td><td>Ambedkar Jayanti</td><td><span class="pill pill-blue">National</span></td></tr>
+                <tr><td>1 May</td><td>Labour Day</td><td><span class="pill pill-blue">National</span></td></tr>
+                <tr><td>15 Aug</td><td>Independence Day</td><td><span class="pill pill-blue">National</span></td></tr>
+                <tr><td>2 Oct</td><td>Gandhi Jayanti</td><td><span class="pill pill-blue">National</span></td></tr>
+                <tr><td>2 Nov</td><td>Diwali</td><td><span class="pill pill-green">Festival</span></td></tr>
+                <tr><td>25 Dec</td><td>Christmas</td><td><span class="pill pill-blue">National</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="modal-add-emp">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-emp')">✕</button>
+    <div class="modal-title">Add New Employee</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name *</label><input type="text" id="new-name" placeholder="Eg. Ramesh Kumar" /></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="new-email" placeholder="ramesh@risenext.com" /></div>
+      <div class="form-group"><label>Role *</label><input type="text" id="new-role" placeholder="Eg. Web Developer" /></div>
+      <div class="form-group"><label>Department *</label>
+        <select id="new-dept"><option>IT</option><option>AR</option><option>HR</option><option>Finance</option></select>
+      </div>
+      <div class="form-group"><label>Salary (₹) *</label><input type="number" id="new-salary" placeholder="25000" /></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="new-phone" placeholder="+91-9876543210" /></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+        <button class="btn" onclick="closeModal('modal-add-emp')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Job Modal -->
+<div class="modal-overlay" id="modal-add-job">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-job')">✕</button>
+    <div class="modal-title">Post New Job</div>
+    <div class="form-grid">
+      <div class="form-group full-width"><label>Job Title *</label><input type="text" id="new-job-title" placeholder="Eg. Full Stack Developer" /></div>
+      <div class="form-group"><label>Department *</label>
+        <select id="new-job-dept"><option>IT</option><option>AR</option><option>HR</option></select>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="new-job-loc" value="Hyderabad" /></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="addJob()">Post Job</button>
+        <button class="btn" onclick="closeModal('modal-add-job')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal-overlay" id="modal-ann">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-ann')">✕</button>
+    <div class="modal-title">New Announcement</div>
+    <div class="form-grid">
+      <div class="form-group full-width"><label>Title *</label><input type="text" id="ann-title" /></div>
+      <div class="form-group"><label>Category</label>
+        <select id="ann-cat"><option>General</option><option>HR</option><option>Finance</option><option>IT</option></select>
+      </div>
+      <div class="form-group full-width"><label>Message *</label><textarea id="ann-body" rows="4" style="resize:none;width:100%"></textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="postAnnouncement()">Post</button>
+        <button class="btn" onclick="closeModal('modal-ann')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════════ SCRIPT ══════════════════ -->
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000/api'
+  : '/api';  // Same-origin in production
+
+let TOKEN = localStorage.getItem('hrm_token') || '';
+let CURRENT_USER = JSON.parse(localStorage.getItem('hrm_user') || 'null');
+
+const AVATAR_COLORS = ['#1a3a5c','#0e6b7c','#534AB7','#7c5e0e','#2e7d46','#b03030','#0e6b7c','#4a148c'];
+
+// ── HELPERS ──────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmtCurr = n => '₹' + Number(n).toLocaleString('en-IN');
+const initials = name => name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const avatarColor = name => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+const pillStatus = s => {
+  const map = { Active:'pill-green', Approved:'pill-green', Present:'pill-green',
+    Pending:'pill-amber', Probation:'pill-amber', Leave:'pill-amber',
+    Rejected:'pill-red', Absent:'pill-red', 'Notice Period':'pill-red',
+    Draft:'pill-gray', WFH:'pill-blue', Paid:'pill-green', Generated:'pill-amber' };
+  return `<span class="pill ${map[s]||'pill-gray'}">${s}</span>`;
+};
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+    ...options
+  });
+  if (res.status === 401 || res.status === 403) { doLogout(); return null; }
+  return res.json();
+}
+
+function toast(msg, type = 'info') {
+  const c = $('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function openModal(id) { $(id).classList.add('open') }
+function closeModal(id) { $(id).classList.remove('open') }
+
+// ── AUTH ──────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = $('login-email').value.trim();
+  const password = $('login-pass').value.trim();
+  const errEl = $('login-error');
+  errEl.style.display = 'none';
+
+  try {
+    const data = await api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!data || data.error) {
+      errEl.textContent = (data && data.error) || 'Login failed';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    TOKEN = data.token;
+    CURRENT_USER = data.user;
+    localStorage.setItem('hrm_token', TOKEN);
+    localStorage.setItem('hrm_user', JSON.stringify(CURRENT_USER));
+    initApp();
+  } catch (e) {
+    errEl.textContent = 'Cannot connect to server. Make sure backend is running on port 5000.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('hrm_token');
+  localStorage.removeItem('hrm_user');
+  TOKEN = ''; CURRENT_USER = null;
+  $('login-page').style.display = 'flex';
+  $('app').classList.add('hidden');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+function initApp() {
+  $('login-page').style.display = 'none';
+  $('app').classList.remove('hidden');
+  if (CURRENT_USER) {
+    $('sidebar-name').textContent = CURRENT_USER.name;
+    $('sidebar-avatar').textContent = initials(CURRENT_USER.name);
+  }
+  $('topbar-date').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  loadDashboard();
+  loadEmployeeSelects();
+}
+
+// Auto-login if token exists
+if (TOKEN && CURRENT_USER) initApp();
+
+// Enter key login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('login-page').style.display !== 'none') doLogin();
+});
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────
+const PAGE_TITLES = { dashboard:'Dashboard', employees:'Employees', recruitment:'Recruitment', attendance:'Attendance', leave:'Leave Management', payroll:'Payroll', announcements:'Announcements' };
+
+function goto(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  $(('page-' + page)).classList.add('active');
+  if (el) el.classList.add('active');
+  $('page-title').textContent = PAGE_TITLES[page] || page;
+
+  const loaders = { employees: loadEmployees, recruitment: loadJobs, attendance: loadAttendance, leave: loadLeaves, payroll: loadPayroll, announcements: loadAnnouncements };
+  if (loaders[page]) loaders[page]();
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [summary, leaves, employees] = await Promise.all([
+    api('/dashboard/summary'),
+    api('/leaves?status=Pending'),
+    api('/employees')
+  ]);
+
+  if (summary && summary.data) {
+    const d = summary.data;
+    $('ds-total').textContent = d.totalEmployees;
+    $('ds-present').textContent = d.presentToday;
+    $('ds-leave').textContent = d.onLeaveToday;
+    $('ds-pending').textContent = d.pendingLeaves + ' pending approval';
+    $('ds-payroll').textContent = fmtCurr(d.monthlyPayroll);
+    $('pending-count-badge').textContent = d.pendingLeaves + ' pending';
+
+    // Departments
+    const deptBody = $('dash-depts');
+    deptBody.innerHTML = (d.departments || []).map(dep => {
+      const pct = Math.round((dep.count / d.totalEmployees) * 100);
+      return `<tr><td>${dep.name}</td><td>${dep.count}</td>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:var(--brand)"></div></div>
+          <span style="font-size:11px;color:var(--muted)">${pct}%</span>
+        </div></td></tr>`;
+    }).join('');
+  }
+
+  if (employees && employees.data) {
+    $('dash-employees').innerHTML = employees.data.map(emp =>
+      `<tr><td><div class="emp-row">
+        <div class="emp-avatar" style="background:${avatarColor(emp.name)}">${initials(emp.name)}</div>
+        <div><div class="emp-name">${emp.name}</div><div class="emp-email">${emp.email}</div></div>
+      </div></td>
+      <td>${emp.role}</td>
+      <td>${emp.department}</td>
+      <td>${pillStatus(emp.status)}</td></tr>`
+    ).join('');
+  }
+
+  if (leaves && leaves.data) {
+    $('dash-leaves').innerHTML = leaves.data.length === 0
+      ? '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">No pending approvals</td></tr>'
+      : leaves.data.map(l =>
+        `<tr id="lrow-${l.id}">
+          <td><div class="emp-row">
+            <div class="emp-avatar" style="background:${avatarColor(l.employeeName)};width:26px;height:26px;font-size:10px">${initials(l.employeeName)}</div>
+            ${l.employeeName}
+          </div></td>
+          <td>${l.type}</td>
+          <td>${l.fromDate} ${l.days > 1 ? '→ ' + l.toDate : ''}</td>
+          <td><div style="display:flex;gap:5px">
+            <button class="btn-sm btn-success" onclick="approveLeave('${l.id}')">✓</button>
+            <button class="btn-sm btn-danger" onclick="rejectLeave('${l.id}')">✕</button>
+          </div></td>
+        </tr>`
+      ).join('');
+  }
+}
+
+// ── EMPLOYEES ──────────────────────────────────────────────────────────
+async function loadEmployees() {
+  const dept = $('filter-dept').value;
+  const status = $('filter-status').value;
+  let url = '/employees?';
+  if (dept) url += 'department=' + dept + '&';
+  if (status) url += 'status=' + status;
+
+  const res = await api(url);
+  if (!res) return;
+
+  $('emp-table').innerHTML = res.data.map(emp =>
+    `<tr>
+      <td><div class="emp-row">
+        <div class="emp-avatar" style="background:${avatarColor(emp.name)}">${initials(emp.name)}</div>
+        <div><div class="emp-name">${emp.name}</div><div class="emp-email">${emp.email}</div></div>
+      </div></td>
+      <td style="color:var(--muted)">${emp.id}</td>
+      <td>${emp.department}</td>
+      <td>${emp.role}</td>
+      <td>${fmtCurr(emp.salary)}</td>
+      <td>${pillStatus(emp.status)}</td>
+      <td><button class="btn-sm btn-danger" onclick="deleteEmployee('${emp.id}')">Delete</button></td>
+    </tr>`
+  ).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No employees found</td></tr>';
+}
+
+async function loadEmployeeSelects() {
+  const res = await api('/employees');
+  if (!res || !res.data) return;
+
+  const opts = res.data.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  ['leave-emp', 'leave-bal-emp', 'att-emp-select', 'payroll-emp-select'].forEach(id => {
+    if ($(id)) $(id).innerHTML = opts;
+  });
+
+  loadAttendanceCalendar();
+  loadPayslip();
+}
+
+function openAddEmployeeModal() { openModal('modal-add-emp') }
+
+async function addEmployee() {
+  const body = {
+    name: $('new-name').value, email: $('new-email').value,
+    role: $('new-role').value, department: $('new-dept').value,
+    salary: $('new-salary').value, phone: $('new-phone').value
+  };
+  if (!body.name || !body.email || !body.role || !body.salary) {
+    toast('Please fill all required fields', 'error'); return;
+  }
+  const res = await api('/employees', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.data) {
+    toast(`${res.data.name} added successfully!`, 'success');
+    closeModal('modal-add-emp');
+    loadEmployees();
+    loadEmployeeSelects();
+    loadDashboard();
+  } else if (res) {
+    toast(res.error || 'Error adding employee', 'error');
+  }
+}
+
+async function deleteEmployee(id) {
+  if (!confirm('Delete this employee?')) return;
+  const res = await api('/employees/' + id, { method: 'DELETE' });
+  if (res && res.message) { toast('Employee removed', 'success'); loadEmployees(); loadDashboard(); }
+}
+
+// ── RECRUITMENT ──────────────────────────────────────────────────────────
+async function loadJobs() {
+  const res = await api('/jobs');
+  if (!res) return;
+
+  const active = res.data.filter(j => j.status === 'Active');
+  const draft = res.data.filter(j => j.status === 'Draft');
+  $('rec-open').textContent = res.data.length;
+  $('rec-apps').textContent = res.data.reduce((s, j) => s + (j.applicants || 0), 0);
+  $('rec-active').textContent = active.length;
+  $('rec-draft').textContent = draft.length;
+
+  $('jobs-table').innerHTML = res.data.map(j =>
+    `<tr>
+      <td style="font-weight:500">${j.title}</td>
+      <td>${j.department}</td>
+      <td>${j.location}</td>
+      <td>${j.applicants}</td>
+      <td><span class="pill pill-blue">${j.stage}</span></td>
+      <td>${pillStatus(j.status)}</td>
+      <td><button class="btn-sm btn-danger" onclick="deleteJob('${j.id}')">Remove</button></td>
+    </tr>`
+  ).join('');
+}
+
+function openJobModal() { openModal('modal-add-job') }
+
+async function addJob() {
+  const body = { title: $('new-job-title').value, department: $('new-job-dept').value, location: $('new-job-loc').value };
+  if (!body.title) { toast('Job title required', 'error'); return; }
+  const res = await api('/jobs', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.data) { toast('Job posted!', 'success'); closeModal('modal-add-job'); loadJobs(); }
+}
+
+async function deleteJob(id) {
+  if (!confirm('Remove this job posting?')) return;
+  const res = await api('/jobs/' + id, { method: 'DELETE' });
+  if (res) { toast('Job removed', 'success'); loadJobs(); }
+}
+
+// ── ATTENDANCE ──────────────────────────────────────────────────────────
+async function loadAttendance() {
+  const today = new Date().toISOString().split('T')[0];
+  const res = await api('/attendance?date=' + today);
+  if (!res) return;
+
+  $('att-today-date').textContent = today;
+  $('att-today-table').innerHTML = res.data.map(a =>
+    `<tr>
+      <td><div class="emp-row">
+        <div class="emp-avatar" style="background:${avatarColor(a.employeeName)};width:26px;height:26px;font-size:10px">${initials(a.employeeName)}</div>
+        ${a.employeeName}
+      </div></td>
+      <td>${a.checkIn || '—'}</td>
+      <td>${a.checkOut || '—'}</td>
+      <td>${pillStatus(a.status)}</td>
+    </tr>`
+  ).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">No records for today</td></tr>';
+
+  loadAttendanceCalendar();
+}
+
+async function loadAttendanceCalendar() {
+  const empSelect = $('att-emp-select');
+  if (!empSelect || !empSelect.value) return;
+
+  const res = await api(`/attendance?employeeId=${empSelect.value}&month=4&year=2026`);
+  if (!res) return;
+
+  const records = {};
+  res.data.forEach(r => { records[r.date] = r.status });
+
+  const cal = $('att-calendar');
+  cal.innerHTML = '';
+
+  // April 2026 starts on Wednesday (index 2 in Mon-Sun grid = 2 blanks)
+  for (let i = 0; i < 2; i++) cal.innerHTML += `<div class="att-day att-weekend"></div>`;
+
+  for (let d = 1; d <= 30; d++) {
+    const dateStr = `2026-04-${String(d).padStart(2,'0')}`;
+    const dayOfWeek = new Date(dateStr).getDay(); // 0=Sun,6=Sat
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isFuture = new Date(dateStr) > new Date();
+    const status = records[dateStr];
+
+    let cls = 'att-day ';
+    let lbl = '';
+    if (isWeekend) { cls += 'att-weekend'; lbl = 'OFF'; }
+    else if (isFuture) { cls += 'att-future'; }
+    else if (status === 'Present') { cls += 'att-present'; lbl = 'P'; }
+    else if (status === 'Absent') { cls += 'att-absent'; lbl = 'A'; }
+    else if (status === 'Leave') { cls += 'att-leave'; lbl = 'L'; }
+    else if (status === 'WFH') { cls += 'att-wfh'; lbl = 'WFH'; }
+    else { cls += 'att-absent'; lbl = 'A'; }
+
+    cal.innerHTML += `<div class="${cls}"><div class="day-num">${d}</div><div class="day-lbl">${lbl}</div></div>`;
+  }
+}
+
+// ── LEAVES ──────────────────────────────────────────────────────────────
+async function loadLeaves() {
+  const status = $('leave-hist-status').value;
+  let url = '/leaves';
+  if (status) url += '?status=' + status;
+  const res = await api(url);
+  if (!res) return;
+
+  $('leave-table').innerHTML = res.data.map(l =>
+    `<tr>
+      <td>${l.employeeName}</td>
+      <td>${l.type}</td>
+      <td>${l.fromDate}</td>
+      <td>${l.toDate}</td>
+      <td>${l.days}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.reason}</td>
+      <td>${pillStatus(l.status)}</td>
+      <td>
+        ${l.status === 'Pending' ? `
+          <div style="display:flex;gap:4px">
+            <button class="btn-sm btn-success" onclick="approveLeave('${l.id}')">✓</button>
+            <button class="btn-sm btn-danger" onclick="rejectLeave('${l.id}')">✕</button>
+          </div>` : '—'}
+      </td>
+    </tr>`
+  ).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No leave records found</td></tr>';
+}
+
+async function submitLeave() {
+  const body = {
+    employeeId: $('leave-emp').value,
+    type: $('leave-type').value,
+    fromDate: $('leave-from').value,
+    toDate: $('leave-to').value,
+    reason: $('leave-reason').value
+  };
+  if (!body.fromDate || !body.toDate || !body.reason) { toast('Please fill all fields', 'error'); return; }
+
+  const res = await api('/leaves', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.data) { toast('Leave applied successfully', 'success'); clearLeaveForm(); loadLeaves(); }
+  else if (res) toast(res.error || 'Error', 'error');
+}
+
+function clearLeaveForm() {
+  $('leave-from').value = '';
+  $('leave-to').value = '';
+  $('leave-reason').value = '';
+}
+
+function loadLeaveBalance() { /* Static for demo — hook to DB in production */ }
+
+async function approveLeave(id) {
+  const res = await api('/leaves/' + id + '/approve', { method: 'PUT' });
+  if (res && res.data) { toast('Leave approved', 'success'); loadLeaves(); loadDashboard(); }
+}
+
+async function rejectLeave(id) {
+  const res = await api('/leaves/' + id + '/reject', { method: 'PUT' });
+  if (res && res.data) { toast('Leave rejected', 'info'); loadLeaves(); loadDashboard(); }
+}
+
+// ── PAYROLL ──────────────────────────────────────────────────────────────
+async function loadPayroll() {
+  const res = await api('/payroll?month=April&year=2026');
+  if (!res) return;
+
+  $('pr-total').textContent = fmtCurr(res.totalGross);
+  $('pr-net').textContent = fmtCurr(res.totalNet);
+
+  $('payroll-table').innerHTML = res.data.map(p =>
+    `<tr>
+      <td style="font-weight:500">${p.employeeName}</td>
+      <td>${p.role}</td>
+      <td>${p.department}</td>
+      <td>${fmtCurr(p.gross)}</td>
+      <td style="color:var(--success);font-weight:500">${fmtCurr(p.net)}</td>
+      <td>${pillStatus(p.status)}</td>
+    </tr>`
+  ).join('');
+
+  // Auto-load first employee payslip
+  const sel = $('payroll-emp-select');
+  if (sel && sel.value) loadPayslip();
+}
+
+async function loadPayslip() {
+  const empId = $('payroll-emp-select').value;
+  if (!empId) return;
+
+  const res = await api(`/payroll?employeeId=${empId}&month=April&year=2026`);
+  if (!res || !res.data || !res.data[0]) {
+    $('payslip-content').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">No payslip found for this employee</div>';
+    return;
+  }
+  const p = res.data[0];
+
+  $('payslip-content').innerHTML = `
+    <div class="payslip-header">
+      <div style="font-size:15px;font-weight:600">Rise Next Office</div>
+      <div style="font-size:11px;opacity:0.75;margin-top:2px">Hyderabad, Telangana</div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px">
+        <div><div style="opacity:0.65;font-size:10px">EMPLOYEE</div>${p.employeeName}</div>
+        <div><div style="opacity:0.65;font-size:10px">ID</div>${p.employeeId}</div>
+        <div><div style="opacity:0.65;font-size:10px">MONTH</div>${p.month} ${p.year}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Earnings</div>
+      <div class="payslip-row"><span>Basic Salary</span><span>${fmtCurr(p.basic)}</span></div>
+      <div class="payslip-row"><span>HRA</span><span>${fmtCurr(p.hra)}</span></div>
+      <div class="payslip-row"><span>Conveyance Allowance</span><span>${fmtCurr(p.conveyance)}</span></div>
+      <div class="payslip-row"><span>Special Allowance</span><span>${fmtCurr(p.special)}</span></div>
+      <div class="payslip-row" style="font-weight:500"><span>Gross Earnings</span><span>${fmtCurr(p.gross)}</span></div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Deductions</div>
+      <div class="payslip-row"><span>Provident Fund (12%)</span><span style="color:var(--danger)">-${fmtCurr(p.pf)}</span></div>
+      <div class="payslip-row"><span>Professional Tax</span><span style="color:var(--danger)">-${fmtCurr(p.pt)}</span></div>
+      ${p.tds > 0 ? `<div class="payslip-row"><span>TDS</span><span style="color:var(--danger)">-${fmtCurr(p.tds)}</span></div>` : ''}
+    </div>
+    <div class="payslip-total"><span>Net Pay</span><span>${fmtCurr(p.net)}</span></div>
+  `;
+}
+
+// ── ANNOUNCEMENTS ──────────────────────────────────────────────────────────
+async function loadAnnouncements() {
+  const res = await api('/announcements');
+  if (!res) return;
+
+  $('ann-list').innerHTML = res.data.map(a =>
+    `<div class="announce-item">
+      <div class="announce-date">${a.date} • ${a.author} <span class="pill pill-gray" style="font-size:10px">${a.category}</span></div>
+      <div class="announce-title">${a.title}</div>
+      <div class="announce-body">${a.body}</div>
+    </div>`
+  ).join('') || '<div style="text-align:center;padding:20px;color:var(--muted)">No announcements</div>';
+}
+
+function openAnnModal() { openModal('modal-ann') }
+
+async function postAnnouncement() {
+  const body = { title: $('ann-title').value, body: $('ann-body').value, category: $('ann-cat').value };
+  if (!body.title || !body.body) { toast('Title and message required', 'error'); return; }
+  const res = await api('/announcements', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.data) { toast('Announcement posted!', 'success'); closeModal('modal-ann'); $('ann-title').value=''; $('ann-body').value=''; loadAnnouncements(); }
+}
+</script>
+</body>
+</html>
