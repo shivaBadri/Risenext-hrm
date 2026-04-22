@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Payslip Generator — Rise Next HRM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --navy: #0f1f3d;
+    --gold: #c9a84c;
+    --gold-light: #f0d98a;
+    --cream: #faf8f3;
+    --gray: #6b7280;
+    --light: #e5e7eb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0ece4;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* ── SELECTOR UI ── */
+  .selector-wrap {
+    max-width: 680px;
+    margin: 0 auto 32px;
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 28px 32px;
+    color: #fff;
+  }
+  .selector-wrap h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold-light);
+    margin-bottom: 20px;
+  }
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 160px; }
+  .form-group label { display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .form-group select, .form-group input {
+    width: 100%; padding: 10px 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; color: #fff; font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  .form-group select option { background: #1e3a5f; }
+  .btn-generate {
+    margin-top: 20px; width: 100%;
+    padding: 13px; background: var(--gold);
+    border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem; font-weight: 600;
+    color: var(--navy); cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-generate:hover { background: var(--gold-light); }
+
+  .error-msg {
+    background: #fee2e2; color: #b91c1c;
+    border-radius: 8px; padding: 10px 16px;
+    margin-top: 12px; font-size: 0.9rem;
+    display: none;
+  }
+
+  /* ── PAYSLIP ── */
+  #payslip-container { max-width: 780px; margin: 0 auto; display: none; }
+
+  .payslip {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  /* Header */
+  .ps-header {
+    background: var(--navy);
+    padding: 32px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ps-logo h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--gold-light);
+    letter-spacing: .02em;
+  }
+  .ps-logo p { color: #94a3b8; font-size: 0.82rem; margin-top: 2px; }
+  .ps-badge {
+    background: var(--gold);
+    color: var(--navy);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* Gold divider */
+  .ps-divider { height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold)); }
+
+  /* Month banner */
+  .ps-month {
+    background: var(--cream);
+    padding: 14px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--light);
+  }
+  .ps-month span { font-size: 0.82rem; color: var(--gray); text-transform: uppercase; letter-spacing: .06em; }
+  .ps-month strong { font-size: 1rem; color: var(--navy); font-weight: 600; }
+
+  /* Employee info */
+  .ps-emp {
+    padding: 28px 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    border-bottom: 1px solid var(--light);
+    background: #fff;
+  }
+  .ps-field label { display: block; font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .ps-field span { font-size: 0.95rem; color: var(--navy); font-weight: 500; }
+
+  /* Earnings & Deductions */
+  .ps-body { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--light); }
+  .ps-col { padding: 28px 40px; }
+  .ps-col:first-child { border-right: 1px solid var(--light); }
+  .ps-col-title {
+    font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: .08em; font-weight: 700;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid;
+  }
+  .ps-col:first-child .ps-col-title { color: #16a34a; border-color: #16a34a; }
+  .ps-col:last-child .ps-col-title { color: #dc2626; border-color: #dc2626; }
+
+  .ps-row {
+    display: flex; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px dashed #f0f0f0;
+    font-size: 0.9rem;
+  }
+  .ps-row:last-child { border-bottom: none; }
+  .ps-row .label { color: var(--gray); }
+  .ps-row .amount { color: var(--navy); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* Net Pay */
+  .ps-net {
+    background: var(--navy);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ps-net-label { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: .08em; }
+  .ps-net-amount { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold-light); }
+  .ps-net-words { color: #64748b; font-size: 0.78rem; margin-top: 3px; }
+
+  /* Bank & Footer */
+  .ps-bank {
+    padding: 20px 40px;
+    display: flex; justify-content: space-between;
+    background: var(--cream);
+    border-bottom: 1px solid var(--light);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .ps-bank-item label { font-size: 0.72rem; color: var(--gray); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 3px; }
+  .ps-bank-item span { font-size: 0.9rem; color: var(--navy); font-weight: 500; }
+
+  .ps-footer {
+    padding: 20px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff;
+  }
+  .ps-footer p { font-size: 0.75rem; color: var(--gray); }
+  .ps-sig { text-align: right; }
+  .ps-sig .sig-line { width: 140px; border-top: 1px solid var(--navy); margin-bottom: 4px; margin-left: auto; }
+  .ps-sig p { font-size: 0.75rem; color: var(--gray); }
+
+  /* Action buttons */
+  .action-row { display: flex; gap: 12px; margin-top: 20px; }
+  .btn-dl {
+    flex: 1; padding: 14px;
+    background: var(--navy); color: #fff;
+    border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+  }
+  .btn-dl:hover { background: #1e3a5f; }
+  .btn-print {
+    flex: 1; padding: 14px;
+    background: var(--gold); color: var(--navy);
+    border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+  }
+  .btn-print:hover { background: var(--gold-light); }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .selector-wrap, .action-row { display: none !important; }
+    #payslip-container { display: block !important; }
+    .payslip { box-shadow: none; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SELECTOR -->
+<div class="selector-wrap">
+  <h2>📄 Payslip Generator</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Employee ID</label>
+      <input type="text" id="empId" placeholder="e.g. RN-1001"/>
+    </div>
+    <div class="form-group">
+      <label>Month</label>
+      <select id="month">
+        <option>January</option><option>February</option><option>March</option>
+        <option>April</option><option>May</option><option>June</option>
+        <option>July</option><option>August</option><option>September</option>
+        <option>October</option><option>November</option><option>December</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Year</label>
+      <input type="number" id="year" value="2026" min="2020" max="2099"/>
+    </div>
+  </div>
+  <div class="form-row" style="margin-top:12px">
+    <div class="form-group">
+      <label>Server URL</label>
+      <input type="text" id="serverUrl" value="https://risenext-hrm.onrender.com"/>
+    </div>
+    <div class="form-group">
+      <label>Auth Token (paste from login)</label>
+      <input type="text" id="authToken" placeholder="Bearer eyJ..."/>
+    </div>
+  </div>
+  <button class="btn-generate" onclick="generatePayslip()">Generate Payslip</button>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<!-- PAYSLIP -->
+<div id="payslip-container">
+  <div class="payslip" id="payslip">
+
+    <div class="ps-header">
+      <div class="ps-logo">
+        <h1>Rise Next</h1>
+        <p>Human Resource Management · Hyderabad, Telangana</p>
+      </div>
+      <div class="ps-badge">Pay Slip</div>
+    </div>
+
+    <div class="ps-divider"></div>
+
+    <div class="ps-month">
+      <span>Pay Period</span>
+      <strong id="ps-period">—</strong>
+      <span>Status</span>
+      <strong id="ps-status">—</strong>
+    </div>
+
+    <div class="ps-emp">
+      <div class="ps-field"><label>Employee Name</label><span id="ps-name">—</span></div>
+      <div class="ps-field"><label>Employee ID</label><span id="ps-id">—</span></div>
+      <div class="ps-field"><label>Department</label><span id="ps-dept">—</span></div>
+      <div class="ps-field"><label>Designation</label><span id="ps-role">—</span></div>
+      <div class="ps-field"><label>Date of Joining</label><span id="ps-join">—</span></div>
+      <div class="ps-field"><label>Working Days</label><span id="ps-days">26</span></div>
+    </div>
+
+    <div class="ps-body">
+      <div class="ps-col">
+        <div class="ps-col-title">Earnings</div>
+        <div class="ps-row"><span class="label">Basic Salary</span><span class="amount" id="e-basic">—</span></div>
+        <div class="ps-row"><span class="label">House Rent Allowance</span><span class="amount" id="e-hra">—</span></div>
+        <div class="ps-row"><span class="label">Conveyance Allowance</span><span class="amount" id="e-conv">—</span></div>
+        <div class="ps-row"><span class="label">Special Allowance</span><span class="amount" id="e-special">—</span></div>
+        <div class="ps-row" style="margin-top:8px;font-weight:700">
+          <span class="label" style="color:#16a34a">Gross Earnings</span>
+          <span class="amount" style="color:#16a34a" id="e-gross">—</span>
+        </div>
+      </div>
+      <div class="ps-col">
+        <div class="ps-col-title">Deductions</div>
+        <div class="ps-row"><span class="label">Provident Fund (12%)</span><span class="amount" id="d-pf">—</span></div>
+        <div class="ps-row"><span class="label">Professional Tax</span><span class="amount" id="d-pt">—</span></div>
+        <div class="ps-row"><span class="label">TDS / Income Tax</span><span class="amount" id="d-tds">—</span></div>
+        <div class="ps-row"><span class="label">ESI</span><span class="amount" id="d-esi">—</span></div>
+        <div class="ps-row" style="margin-top:8px;font-weight:700">
+          <span class="label" style="color:#dc2626">Total Deductions</span>
+          <span class="amount" style="color:#dc2626" id="d-total">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps-net">
+      <div>
+        <div class="ps-net-label">Net Pay (Take Home)</div>
+        <div class="ps-net-words" id="ps-net-words">—</div>
+      </div>
+      <div class="ps-net-amount" id="ps-net">₹0</div>
+    </div>
+
+    <div class="ps-bank">
+      <div class="ps-bank-item"><label>Bank Name</label><span id="ps-bank">HDFC Bank</span></div>
+      <div class="ps-bank-item"><label>Account Number</label><span id="ps-acc">XXXX XXXX 1234</span></div>
+      <div class="ps-bank-item"><label>IFSC Code</label><span id="ps-ifsc">HDFC0001234</span></div>
+      <div class="ps-bank-item"><label>Payment Mode</label><span>NEFT / Bank Transfer</span></div>
+    </div>
+
+    <div class="ps-footer">
+      <div>
+        <p>This is a computer-generated payslip and does not require a physical signature.</p>
+        <p style="margin-top:4px">For queries contact: hr@risenext.com</p>
+      </div>
+      <div class="ps-sig">
+        <div class="sig-line"></div>
+        <p>Authorised Signatory</p>
+        <p>Rise Next HR Department</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="action-row">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Payslip</button>
+    <button class="btn-dl" onclick="downloadPDF()">⬇️ Download PDF</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function fmt(n) {
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+
+function toWords(num) {
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+    'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  if (num === 0) return 'Zero';
+  function inWords(n) {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n/10)] + (n%10 ? ' ' + a[n%10] : '');
+    if (n < 1000) return a[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + inWords(n%100) : '');
+    if (n < 100000) return inWords(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' ' + inWords(n%1000) : '');
+    return inWords(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' ' + inWords(n%100000) : '');
+  }
+  return inWords(num) + ' Rupees Only';
+}
+
+async function generatePayslip() {
+  const empId = document.getElementById('empId').value.trim();
+  const month = document.getElementById('month').value;
+  const year = document.getElementById('year').value;
+  const serverUrl = document.getElementById('serverUrl').value.trim().replace(/\/$/, '');
+  const token = document.getElementById('authToken').value.trim();
+  const errEl = document.getElementById('errorMsg');
+
+  errEl.style.display = 'none';
+
+  if (!empId || !token) {
+    errEl.textContent = 'Please enter Employee ID and Auth Token.';
+    errEl.style.display = 'block'; return;
+  }
+
+  try {
+    // Fetch payroll data
+    const pRes = await fetch(`${serverUrl}/api/payroll?employeeId=${empId}&month=${month}&year=${year}`, {
+      headers: { Authorization: token.startsWith('Bearer') ? token : `Bearer ${token}` }
+    });
+    const pData = await pRes.json();
+
+    if (!pData.data || pData.data.length === 0) {
+      errEl.textContent = `No payslip found for ${empId} in ${month} ${year}. Please generate payroll first from admin panel.`;
+      errEl.style.display = 'block'; return;
+    }
+
+    // Fetch employee data
+    const eRes = await fetch(`${serverUrl}/api/employees/${empId}`, {
+      headers: { Authorization: token.startsWith('Bearer') ? token : `Bearer ${token}` }
+    });
+    const eData = await eRes.json();
+    const emp = eData.data || eData;
+    const slip = pData.data[0];
+
+    // ESI = 0.75% of gross if gross <= 21000
+    const esi = slip.gross <= 21000 ? Math.round(slip.gross * 0.0075) : 0;
+    const totalDed = (slip.pf || 0) + (slip.pt || 0) + (slip.tds || 0) + esi;
+    const netPay = slip.gross - totalDed;
+
+    // Populate payslip
+    document.getElementById('ps-period').textContent = `${month} ${year}`;
+    document.getElementById('ps-status').textContent = slip.status || 'Generated';
+    document.getElementById('ps-name').textContent = emp.name || slip.employeeName || empId;
+    document.getElementById('ps-id').textContent = empId;
+    document.getElementById('ps-dept').textContent = emp.department || '—';
+    document.getElementById('ps-role').textContent = emp.role || '—';
+    document.getElementById('ps-join').textContent = emp.joinDate || '—';
+
+    document.getElementById('e-basic').textContent = fmt(slip.basic || 0);
+    document.getElementById('e-hra').textContent = fmt(slip.hra || 0);
+    document.getElementById('e-conv').textContent = fmt(slip.conveyance || 0);
+    document.getElementById('e-special').textContent = fmt(slip.special || 0);
+    document.getElementById('e-gross').textContent = fmt(slip.gross || 0);
+
+    document.getElementById('d-pf').textContent = fmt(slip.pf || 0);
+    document.getElementById('d-pt').textContent = fmt(slip.pt || 0);
+    document.getElementById('d-tds').textContent = fmt(slip.tds || 0);
+    document.getElementById('d-esi').textContent = fmt(esi);
+    document.getElementById('d-total').textContent = fmt(totalDed);
+
+    document.getElementById('ps-net').textContent = fmt(netPay);
+    document.getElementById('ps-net-words').textContent = toWords(netPay);
+
+    document.getElementById('payslip-container').style.display = 'block';
+    document.getElementById('payslip-container').scrollIntoView({ behavior: 'smooth' });
+
+  } catch (err) {
+    errEl.textContent = 'Error: ' + err.message + '. Check server URL and token.';
+    errEl.style.display = 'block';
+  }
+}
+
+function downloadPDF() {
+  const el = document.getElementById('payslip');
+  const empName = document.getElementById('ps-name').textContent;
+  const period = document.getElementById('ps-period').textContent;
+  html2pdf().set({
+    margin: 0,
+    filename: `Payslip_${empName}_${period}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(el).save();
+}
+</script>
+</body>
+</html>
