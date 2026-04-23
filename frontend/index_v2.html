@@ -6,6 +6,7 @@
 <title>Rise Next — HRM Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════
    VARIABLES & RESET
@@ -234,6 +235,50 @@ tbody tr:hover td { background:#fafbfc }
 .modal-title { font-size:16px; font-weight:600; margin-bottom:20px }
 .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); float:right; margin-top:-4px }
 
+/* ── PAYSLIP PDF STYLES ── */
+.ps-wrap { background:#fff; border-radius:10px; overflow:hidden; border:1px solid var(--border); font-size:12px }
+.ps-top { background:var(--brand); color:#fff; padding:18px 20px; display:flex; justify-content:space-between; align-items:center }
+.ps-top-left h3 { font-family:'Playfair Display',serif; font-size:16px; color:#f0d98a }
+.ps-top-left p { font-size:10px; opacity:0.6; margin-top:2px }
+.ps-top-right { background:#e8a020; color:var(--brand); padding:5px 14px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase }
+.ps-gold-bar { height:3px; background:linear-gradient(90deg,#c9a84c,#f0d98a,#c9a84c) }
+.ps-period-bar { background:#f8f6f0; padding:9px 20px; display:flex; justify-content:space-between; border-bottom:1px solid var(--border); font-size:11px }
+.ps-period-bar span { color:var(--muted) }
+.ps-period-bar strong { color:var(--brand) }
+.ps-emp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px 20px; border-bottom:1px solid var(--border) }
+.ps-emp-field label { display:block; font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:2px }
+.ps-emp-field span { font-size:12px; font-weight:500; color:var(--brand) }
+.ps-cols { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--border) }
+.ps-col-inner { padding:14px 20px }
+.ps-col-inner:first-child { border-right:1px solid var(--border) }
+.ps-col-title { font-size:9px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; padding-bottom:8px; margin-bottom:8px; border-bottom:2px solid }
+.ps-col-inner:first-child .ps-col-title { color:var(--success); border-color:var(--success) }
+.ps-col-inner:last-child .ps-col-title { color:var(--danger); border-color:var(--danger) }
+.ps-row2 { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #f0f0f0; font-size:11px }
+.ps-row2:last-child { border-bottom:none }
+.ps-row2 .lbl { color:var(--muted) }
+.ps-row2 .amt { font-weight:500; color:var(--text) }
+.ps-row2.total-row { font-weight:700; font-size:12px; margin-top:4px }
+.ps-row2.total-row .lbl { color:var(--success) }
+.ps-col-inner:last-child .ps-row2.total-row .lbl { color:var(--danger) }
+.ps-net-bar { background:var(--brand); padding:14px 20px; display:flex; justify-content:space-between; align-items:center }
+.ps-net-label { color:rgba(255,255,255,0.6); font-size:10px; text-transform:uppercase; letter-spacing:.08em }
+.ps-net-words { color:rgba(255,255,255,0.5); font-size:9px; margin-top:2px }
+.ps-net-amount { font-family:'Playfair Display',serif; font-size:22px; color:#f0d98a }
+.ps-bank-bar { background:#f8f6f0; padding:10px 20px; display:flex; gap:24px; border-bottom:1px solid var(--border); flex-wrap:wrap }
+.ps-bank-item label { font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:block; margin-bottom:2px }
+.ps-bank-item span { font-size:11px; font-weight:500; color:var(--brand) }
+.ps-footer2 { padding:10px 20px; display:flex; justify-content:space-between; align-items:center }
+.ps-footer2 p { font-size:10px; color:var(--muted) }
+.ps-sig { text-align:right }
+.ps-sig .sig-line { width:100px; border-top:1px solid var(--brand); margin:0 0 3px auto }
+.ps-sig p { font-size:9px; color:var(--muted) }
+.ps-month-select { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap }
+.ps-dl-btn { background:var(--brand); color:#fff; border:none; border-radius:7px; padding:8px 16px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit }
+.ps-dl-btn:hover { background:var(--brand-light) }
+.ps-print-btn { background:var(--accent-light); color:var(--warn); border:1px solid var(--accent); border-radius:7px; padding:8px 16px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit }
+.ps-print-btn:hover { background:#fde8b0 }
+
 /* Toast */
 .toast-container { position:fixed; top:16px; right:16px; z-index:2000; display:flex; flex-direction:column; gap:8px }
 .toast { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 16px; font-size:13px; box-shadow:var(--shadow); display:flex; align-items:center; gap:8px; min-width:240px; animation:slideIn 0.25s ease }
@@ -251,12 +296,12 @@ tbody tr:hover td { background:#fafbfc }
     <div class="login-logo">Rise Next</div>
     <div class="login-sub">HR Management Portal</div>
     <label>Email Address</label>
-    <input type="email" id="login-email" value="admin@risenext.com" placeholder="admin@risenext.com" />
+    <input type="email" id="login-email" placeholder="Enter your email" />
     <label>Password</label>
-    <input type="password" id="login-pass" value="admin@123" placeholder="••••••••" />
+    <input type="password" id="login-pass" placeholder="Enter your password" />
     <div class="login-error" id="login-error"></div>
     <button class="login-btn" onclick="doLogin()">Sign in to Portal</button>
-    <div class="login-hint">Default: admin@risenext.com / admin@123</div>
+    <div class="login-hint">Contact HR admin if you need your login credentials</div>
   </div>
 </div>
 
@@ -269,26 +314,15 @@ tbody tr:hover td { background:#fafbfc }
       <div class="logo-name">Rise Next</div>
       <div class="logo-sub">HR Portal</div>
     </div>
-    <nav class="nav">
-      <div class="nav-section">Overview</div>
-      <button class="nav-item active" onclick="goto('dashboard',this)"><span class="nav-icon">⬛</span>Dashboard</button>
-      <div class="nav-section">People</div>
-      <button class="nav-item" onclick="goto('employees',this)"><span class="nav-icon">👤</span>Employees</button>
-      <button class="nav-item" onclick="goto('recruitment',this)"><span class="nav-icon">📋</span>Recruitment</button>
-      <div class="nav-section">Time & Leave</div>
-      <button class="nav-item" onclick="goto('attendance',this)"><span class="nav-icon">🕐</span>Attendance</button>
-      <button class="nav-item" onclick="goto('leave',this)"><span class="nav-icon">📅</span>Leave</button>
-      <div class="nav-section">Finance</div>
-      <button class="nav-item" onclick="goto('payroll',this)"><span class="nav-icon">💰</span>Payroll</button>
-      <div class="nav-section">Comms</div>
-      <button class="nav-item" onclick="goto('announcements',this)"><span class="nav-icon">📢</span>Announcements</button>
+    <nav class="nav" id="sidebar-nav">
+      <!-- Populated dynamically based on role -->
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="user-avatar" id="sidebar-avatar">HR</div>
         <div>
           <div class="user-name" id="sidebar-name">HR Admin</div>
-          <div class="user-role">Administrator</div>
+          <div class="user-role" id="sidebar-role">Administrator</div>
         </div>
       </div>
       <button class="logout-btn" onclick="doLogout()">Sign out</button>
@@ -488,11 +522,125 @@ tbody tr:hover td { background:#fafbfc }
         </div>
       </div>
 
+      <!-- ════════ PAYSLIP ════════ -->
+      <div class="page" id="page-payslip">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📄 Download Payslip</div>
+          </div>
+          <div class="ps-month-select">
+            <select id="ps-emp-sel" class="btn-sm" style="font-size:12px;min-width:160px"></select>
+            <select id="ps-month-sel" class="btn-sm">
+              <option>January</option><option>February</option><option>March</option>
+              <option selected>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+            <select id="ps-year-sel" class="btn-sm">
+              <option>2025</option><option selected>2026</option><option>2027</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadFullPayslip()" style="font-size:12px">View Payslip</button>
+          </div>
+          <div id="ps-output">
+            <div style="text-align:center;padding:40px;color:var(--muted)">Select an employee and click View Payslip</div>
+          </div>
+          <div id="ps-actions" style="display:none;margin-top:14px;display:flex;gap:10px;display:none">
+            <button class="ps-print-btn" onclick="window.print()">🖨️ Print</button>
+            <button class="ps-dl-btn" onclick="downloadPayslipPDF()">⬇️ Download PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ EMPLOYEE SELF-SERVICE ════════ -->
+      <div class="page" id="page-myprofile">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">👤 My Profile</div></div>
+            <div id="my-profile-content" style="padding:10px 0">
+              <div style="text-align:center;padding:20px"><div class="spinner"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📅 My Leave Balance</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+              <div class="stat-card"><div class="stat-label">Casual</div><div class="stat-val" id="my-casual">—</div><div class="stat-sub">days</div></div>
+              <div class="stat-card"><div class="stat-label">Sick</div><div class="stat-val" id="my-sick">—</div><div class="stat-sub">days</div></div>
+              <div class="stat-card"><div class="stat-label">Earned</div><div class="stat-val" id="my-earned">—</div><div class="stat-sub">days</div></div>
+            </div>
+            <div class="card-header" style="margin-top:10px"><div class="card-title">Apply Leave</div></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Leave Type</label>
+                <select id="my-leave-type"><option>Casual Leave</option><option>Sick Leave</option><option>Earned Leave</option></select>
+              </div>
+              <div class="form-group"><label>From Date</label><input type="date" id="my-leave-from"/></div>
+              <div class="form-group"><label>To Date</label><input type="date" id="my-leave-to"/></div>
+              <div class="form-group"><label>Reason</label><input type="text" id="my-leave-reason" placeholder="Reason for leave"/></div>
+              <div class="form-actions"><button class="btn btn-primary" onclick="applyMyLeave()">Apply Leave</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 My Leave History</div></div>
+          <table>
+            <thead><tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th></tr></thead>
+            <tbody id="my-leave-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ MY ATTENDANCE ════════ -->
+      <div class="page" id="page-myattendance">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🕐 Today's Attendance</div></div>
+            <div id="my-today-att" style="padding:10px 0;text-align:center;color:var(--muted)">Loading...</div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn btn-primary" onclick="myCheckIn()" style="flex:1">✅ Check In</button>
+              <button class="btn btn-success" onclick="myCheckOut()" style="flex:1">🏁 Check Out</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📊 Monthly Summary</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              <div class="stat-card"><div class="stat-label">Present</div><div class="stat-val" id="my-att-present" style="color:var(--success)">—</div></div>
+              <div class="stat-card"><div class="stat-label">Absent</div><div class="stat-val" id="my-att-absent" style="color:var(--danger)">—</div></div>
+              <div class="stat-card"><div class="stat-label">Leave</div><div class="stat-val" id="my-att-leave" style="color:var(--warn)">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ MY PAYSLIP ════════ -->
+      <div class="page" id="page-mypayslip">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📄 My Payslip</div></div>
+          <div class="ps-month-select">
+            <select id="my-ps-month" class="btn-sm">
+              <option>January</option><option>February</option><option>March</option>
+              <option selected>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+            <select id="my-ps-year" class="btn-sm">
+              <option>2025</option><option selected>2026</option><option>2027</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadMyPayslip()" style="font-size:12px">View Payslip</button>
+          </div>
+          <div id="my-ps-output">
+            <div style="text-align:center;padding:40px;color:var(--muted)">Select month and click View Payslip</div>
+          </div>
+          <div id="my-ps-actions" style="display:none;margin-top:14px;gap:10px;flex-wrap:wrap">
+            <button class="ps-print-btn" onclick="window.print()">🖨️ Print</button>
+            <button class="ps-dl-btn" onclick="downloadMyPayslipPDF()">⬇️ Download PDF</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ════════ ANNOUNCEMENTS ════════ -->
       <div class="page" id="page-announcements">
         <div class="two-col">
           <div class="card">
-            <div class="card-header"><div class="card-title">Announcements</div><button class="btn-sm btn-primary" onclick="openAnnModal()">+ Post</button></div>
+            <div class="card-header"><div class="card-title">Announcements</div><button class="btn-sm btn-primary" id="btn-post-ann" onclick="openAnnModal()" style="display:none">+ Post</button></div>
             <div id="ann-list"></div>
           </div>
           <div class="card">
@@ -515,6 +663,23 @@ tbody tr:hover td { background:#fafbfc }
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ════ CHANGE PASSWORD MODAL ════ -->
+<div class="modal-overlay" id="modal-change-pass">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-change-pass')">✕</button>
+    <div class="modal-title">🔒 Change Password</div>
+    <div class="form-grid">
+      <div class="form-group full-width"><label>Current Password</label><input type="password" id="cp-current" placeholder="Enter current password"/></div>
+      <div class="form-group full-width"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"/></div>
+      <div class="form-group full-width"><label>Confirm New Password</label><input type="password" id="cp-confirm" placeholder="Repeat new password"/></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        <button class="btn" onclick="closeModal('modal-change-pass')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════ MODALS ══════════════════ -->
 <!-- Add Employee Modal -->
@@ -665,16 +830,60 @@ function doLogout() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────
+function buildSidebar(role) {
+  const nav = $('sidebar-nav');
+  if (role === 'admin') {
+    nav.innerHTML = `
+      <div class="nav-section">Overview</div>
+      <button class="nav-item active" onclick="goto('dashboard',this)"><span class="nav-icon">⬛</span>Dashboard</button>
+      <div class="nav-section">People</div>
+      <button class="nav-item" onclick="goto('employees',this)"><span class="nav-icon">👤</span>Employees</button>
+      <button class="nav-item" onclick="goto('recruitment',this)"><span class="nav-icon">📋</span>Recruitment</button>
+      <div class="nav-section">Time & Leave</div>
+      <button class="nav-item" onclick="goto('attendance',this)"><span class="nav-icon">🕐</span>Attendance</button>
+      <button class="nav-item" onclick="goto('leave',this)"><span class="nav-icon">📅</span>Leave</button>
+      <div class="nav-section">Finance</div>
+      <button class="nav-item" onclick="goto('payroll',this)"><span class="nav-icon">💰</span>Payroll</button>
+      <button class="nav-item" onclick="goto('payslip',this)"><span class="nav-icon">📄</span>Payslip</button>
+      <div class="nav-section">Comms</div>
+      <button class="nav-item" onclick="goto('announcements',this)"><span class="nav-icon">📢</span>Announcements</button>
+      <div class="nav-section">Account</div>
+      <button class="nav-item" onclick="openModal('modal-change-pass')"><span class="nav-icon">🔒</span>Change Password</button>`;
+  } else {
+    nav.innerHTML = `
+      <div class="nav-section">My Space</div>
+      <button class="nav-item active" onclick="goto('myprofile',this)"><span class="nav-icon">👤</span>My Profile & Leave</button>
+      <button class="nav-item" onclick="goto('myattendance',this)"><span class="nav-icon">🕐</span>My Attendance</button>
+      <button class="nav-item" onclick="goto('mypayslip',this)"><span class="nav-icon">📄</span>My Payslip</button>
+      <div class="nav-section">Comms</div>
+      <button class="nav-item" onclick="goto('announcements',this)"><span class="nav-icon">📢</span>Announcements</button>
+      <div class="nav-section">Account</div>
+      <button class="nav-item" onclick="openModal('modal-change-pass')"><span class="nav-icon">🔒</span>Change Password</button>`;
+  }
+}
+
 function initApp() {
   $('login-page').style.display = 'none';
   $('app').classList.remove('hidden');
   if (CURRENT_USER) {
     $('sidebar-name').textContent = CURRENT_USER.name;
     $('sidebar-avatar').textContent = initials(CURRENT_USER.name);
+    $('sidebar-role').textContent = CURRENT_USER.role === 'admin' ? 'Administrator' : CURRENT_USER.role || 'Employee';
   }
   $('topbar-date').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
-  loadDashboard();
-  loadEmployeeSelects();
+
+  buildSidebar(CURRENT_USER ? CURRENT_USER.role : 'employee');
+
+  if (CURRENT_USER && CURRENT_USER.role === 'admin') {
+    loadDashboard();
+    loadEmployeeSelects();
+  } else {
+    // Employee: go to their profile
+    goto('myprofile', document.querySelector('.nav-item'));
+    loadMyProfile();
+    loadMyAttSummary();
+    loadMyLeaves();
+  }
 }
 
 // Auto-login if token exists
@@ -686,16 +895,32 @@ document.addEventListener('keydown', e => {
 });
 
 // ── NAVIGATION ──────────────────────────────────────────────────────────
-const PAGE_TITLES = { dashboard:'Dashboard', employees:'Employees', recruitment:'Recruitment', attendance:'Attendance', leave:'Leave Management', payroll:'Payroll', announcements:'Announcements' };
+const PAGE_TITLES = { dashboard:'Dashboard', employees:'Employees', recruitment:'Recruitment', attendance:'Attendance', leave:'Leave Management', payroll:'Payroll', payslip:'Payslip Download', announcements:'Announcements', myprofile:'My Profile', myattendance:'My Attendance', mypayslip:'My Payslip' };
 
 function goto(page, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  $(('page-' + page)).classList.add('active');
+  const pageEl = $('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
   if (el) el.classList.add('active');
   $('page-title').textContent = PAGE_TITLES[page] || page;
 
-  const loaders = { employees: loadEmployees, recruitment: loadJobs, attendance: loadAttendance, leave: loadLeaves, payroll: loadPayroll, announcements: loadAnnouncements };
+  // Show/hide post announcement button based on role
+  const btnAnn = $('btn-post-ann');
+  if (btnAnn) btnAnn.style.display = (CURRENT_USER && CURRENT_USER.role === 'admin') ? 'inline-flex' : 'none';
+
+  const loaders = {
+    employees: loadEmployees,
+    recruitment: loadJobs,
+    attendance: loadAttendance,
+    leave: loadLeaves,
+    payroll: loadPayroll,
+    payslip: populatePayslipEmpSelect,
+    announcements: loadAnnouncements,
+    myprofile: () => { loadMyProfile(); loadMyLeaves(); },
+    myattendance: () => { loadMyTodayAtt(); loadMyAttSummary(); },
+    mypayslip: () => {}
+  };
   if (loaders[page]) loaders[page]();
 }
 
@@ -1052,7 +1277,349 @@ async function loadPayslip() {
   `;
 }
 
-// ── ANNOUNCEMENTS ──────────────────────────────────────────────────────────
+// ── EMPLOYEE SELF-SERVICE ──────────────────────────────────────────────
+async function loadMyProfile() {
+  if (!CURRENT_USER || CURRENT_USER.role === 'admin') return;
+  const res = await api('/employees/' + CURRENT_USER.empId);
+  if (!res || !res.data) return;
+  const e = res.data;
+  $('my-profile-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0">
+      <div class="ps-emp-field"><label>Full Name</label><span>${e.name}</span></div>
+      <div class="ps-emp-field"><label>Employee ID</label><span>${e.id}</span></div>
+      <div class="ps-emp-field"><label>Email</label><span>${e.email}</span></div>
+      <div class="ps-emp-field"><label>Phone</label><span>${e.phone || '—'}</span></div>
+      <div class="ps-emp-field"><label>Department</label><span>${e.department}</span></div>
+      <div class="ps-emp-field"><label>Designation</label><span>${e.role}</span></div>
+      <div class="ps-emp-field"><label>Date of Joining</label><span>${e.joinDate}</span></div>
+      <div class="ps-emp-field"><label>Status</label><span>${pillStatus(e.status)}</span></div>
+      <div class="ps-emp-field" style="grid-column:1/-1"><label>Address</label><span>${e.address || '—'}</span></div>
+    </div>`;
+  // Static leave balance
+  $('my-casual').textContent = '6';
+  $('my-sick').textContent = '6';
+  $('my-earned').textContent = '12';
+}
+
+async function loadMyLeaves() {
+  if (!CURRENT_USER || CURRENT_USER.role === 'admin') return;
+  const res = await api('/leaves?employeeId=' + CURRENT_USER.empId);
+  if (!res) return;
+  $('my-leave-table').innerHTML = res.data.map(l =>
+    `<tr>
+      <td>${l.type}</td><td>${l.fromDate}</td><td>${l.toDate}</td>
+      <td>${l.days}</td><td>${l.reason}</td><td>${pillStatus(l.status)}</td>
+    </tr>`
+  ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">No leave records</td></tr>';
+}
+
+async function applyMyLeave() {
+  if (!CURRENT_USER) return;
+  const body = {
+    employeeId: CURRENT_USER.empId,
+    type: $('my-leave-type').value,
+    fromDate: $('my-leave-from').value,
+    toDate: $('my-leave-to').value,
+    reason: $('my-leave-reason').value
+  };
+  if (!body.fromDate || !body.toDate || !body.reason) { toast('Please fill all fields', 'error'); return; }
+  const res = await api('/leaves', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.data) {
+    toast('Leave applied successfully!', 'success');
+    $('my-leave-from').value = ''; $('my-leave-to').value = ''; $('my-leave-reason').value = '';
+    loadMyLeaves();
+  } else toast(res?.error || 'Error applying leave', 'error');
+}
+
+async function loadMyTodayAtt() {
+  if (!CURRENT_USER || CURRENT_USER.role === 'admin') return;
+  const today = new Date().toISOString().split('T')[0];
+  const res = await api('/attendance?employeeId=' + CURRENT_USER.empId + '&date=' + today);
+  const el = $('my-today-att');
+  if (!res || !res.data || !res.data[0]) {
+    el.innerHTML = '<div style="color:var(--warn);font-size:14px">⚠️ Not checked in yet today</div>';
+    return;
+  }
+  const a = res.data[0];
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:left">
+      <div class="ps-emp-field"><label>Date</label><span>${a.date}</span></div>
+      <div class="ps-emp-field"><label>Check In</label><span style="color:var(--success)">${a.checkIn || '—'}</span></div>
+      <div class="ps-emp-field"><label>Check Out</label><span style="color:var(--danger)">${a.checkOut || 'Not yet'}</span></div>
+    </div>`;
+}
+
+async function loadMyAttSummary() {
+  if (!CURRENT_USER || CURRENT_USER.role === 'admin') return;
+  const now = new Date();
+  const res = await api(`/attendance/summary/${CURRENT_USER.empId}?month=${now.getMonth()+1}&year=${now.getFullYear()}`);
+  if (!res || !res.data) return;
+  $('my-att-present').textContent = res.data.present || 0;
+  $('my-att-absent').textContent = res.data.absent || 0;
+  $('my-att-leave').textContent = res.data.leave || 0;
+}
+
+async function myCheckIn() {
+  const res = await api('/attendance/checkin', { method: 'POST', body: JSON.stringify({ employeeId: CURRENT_USER.empId }) });
+  if (res && res.data) { toast('Checked in at ' + res.data.checkIn, 'success'); loadMyTodayAtt(); loadMyAttSummary(); }
+  else toast(res?.error || 'Already checked in today', 'error');
+}
+
+async function myCheckOut() {
+  const today = new Date().toISOString().split('T')[0];
+  const res = await api('/attendance?employeeId=' + CURRENT_USER.empId + '&date=' + today);
+  if (!res || !res.data || !res.data[0]) { toast('Check in first!', 'error'); return; }
+  const attId = res.data[0].id;
+  const res2 = await api('/attendance/checkout/' + attId, { method: 'PUT' });
+  if (res2 && res2.data) { toast('Checked out at ' + res2.data.checkOut, 'success'); loadMyTodayAtt(); }
+  else toast(res2?.error || 'Error checking out', 'error');
+}
+
+async function loadMyPayslip() {
+  if (!CURRENT_USER || CURRENT_USER.role === 'admin') return;
+  const month = $('my-ps-month').value;
+  const year = $('my-ps-year').value;
+  $('my-ps-output').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';
+  $('my-ps-actions').style.display = 'none';
+
+  const [pRes, eRes] = await Promise.all([
+    api(`/payroll?employeeId=${CURRENT_USER.empId}&month=${month}&year=${year}`),
+    api(`/employees/${CURRENT_USER.empId}`)
+  ]);
+
+  if (!pRes || !pRes.data || !pRes.data[0]) {
+    $('my-ps-output').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">No payslip found for ${month} ${year}.<br><small>Contact HR if payroll has been processed.</small></div>`;
+    return;
+  }
+
+  const p = pRes.data[0];
+  const emp = eRes ? (eRes.data || eRes) : {};
+  const esi = p.gross <= 21000 ? Math.round(p.gross * 0.0075) : 0;
+  const totalDed = (p.pf||0) + (p.pt||0) + (p.tds||0) + esi;
+  const netPay = p.gross - totalDed;
+
+  $('my-ps-output').innerHTML = `
+    <div class="ps-wrap" id="my-payslip-pdf-target">
+      <div class="ps-top">
+        <div class="ps-top-left"><h3>Rise Next</h3><p>Human Resource Management · Hyderabad, Telangana</p></div>
+        <div class="ps-top-right">Pay Slip</div>
+      </div>
+      <div class="ps-gold-bar"></div>
+      <div class="ps-period-bar">
+        <div><span>Pay Period &nbsp;</span><strong>${month} ${year}</strong></div>
+        <div><span>Status &nbsp;</span><strong>${p.status || 'Generated'}</strong></div>
+        <div><span>Generated &nbsp;</span><strong>${new Date().toLocaleDateString('en-IN')}</strong></div>
+      </div>
+      <div class="ps-emp-grid">
+        <div class="ps-emp-field"><label>Employee Name</label><span>${emp.name || CURRENT_USER.name}</span></div>
+        <div class="ps-emp-field"><label>Employee ID</label><span>${CURRENT_USER.empId}</span></div>
+        <div class="ps-emp-field"><label>Department</label><span>${emp.department || CURRENT_USER.department || '—'}</span></div>
+        <div class="ps-emp-field"><label>Designation</label><span>${emp.role || '—'}</span></div>
+        <div class="ps-emp-field"><label>Date of Joining</label><span>${emp.joinDate || '—'}</span></div>
+        <div class="ps-emp-field"><label>Working Days</label><span>26</span></div>
+      </div>
+      <div class="ps-cols">
+        <div class="ps-col-inner">
+          <div class="ps-col-title">Earnings</div>
+          <div class="ps-row2"><span class="lbl">Basic Salary</span><span class="amt">${fmtCurr(p.basic||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">House Rent Allowance</span><span class="amt">${fmtCurr(p.hra||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Conveyance Allowance</span><span class="amt">${fmtCurr(p.conveyance||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Special Allowance</span><span class="amt">${fmtCurr(p.special||0)}</span></div>
+          <div class="ps-row2 total-row"><span class="lbl">Gross Earnings</span><span class="amt">${fmtCurr(p.gross||0)}</span></div>
+        </div>
+        <div class="ps-col-inner">
+          <div class="ps-col-title">Deductions</div>
+          <div class="ps-row2"><span class="lbl">Provident Fund (12%)</span><span class="amt">${fmtCurr(p.pf||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Professional Tax</span><span class="amt">${fmtCurr(p.pt||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">TDS / Income Tax</span><span class="amt">${fmtCurr(p.tds||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">ESI (0.75%)</span><span class="amt">${fmtCurr(esi)}</span></div>
+          <div class="ps-row2 total-row"><span class="lbl">Total Deductions</span><span class="amt">${fmtCurr(totalDed)}</span></div>
+        </div>
+      </div>
+      <div class="ps-net-bar">
+        <div>
+          <div class="ps-net-label">Net Pay (Take Home)</div>
+          <div class="ps-net-words">${toWordsIN(netPay)}</div>
+        </div>
+        <div class="ps-net-amount">${fmtCurr(netPay)}</div>
+      </div>
+      <div class="ps-bank-bar">
+        <div class="ps-bank-item"><label>Bank Name</label><span>HDFC Bank</span></div>
+        <div class="ps-bank-item"><label>Account No.</label><span>XXXX XXXX 1234</span></div>
+        <div class="ps-bank-item"><label>IFSC Code</label><span>HDFC0001234</span></div>
+        <div class="ps-bank-item"><label>Payment Mode</label><span>NEFT / Bank Transfer</span></div>
+      </div>
+      <div class="ps-footer2">
+        <div><p>System-generated payslip. Queries: hr@risenext.com</p></div>
+        <div class="ps-sig"><div class="sig-line"></div><p>Authorised Signatory</p><p>Rise Next HR Dept</p></div>
+      </div>
+    </div>`;
+  $('my-ps-actions').style.display = 'flex';
+  toast('Payslip loaded!', 'success');
+}
+
+function downloadMyPayslipPDF() {
+  const el = document.getElementById('my-payslip-pdf-target');
+  if (!el) { toast('View payslip first', 'error'); return; }
+  const month = $('my-ps-month').value;
+  const year = $('my-ps-year').value;
+  html2pdf().set({
+    margin: 8, filename: `Payslip_${CURRENT_USER.name}_${month}_${year}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(el).save();
+}
+
+// ── CHANGE PASSWORD ────────────────────────────────────────────────────
+async function changePassword() {
+  const currentPassword = $('cp-current').value;
+  const newPassword = $('cp-new').value;
+  const confirmPassword = $('cp-confirm').value;
+  if (!currentPassword || !newPassword || !confirmPassword) { toast('All fields required', 'error'); return; }
+  if (newPassword !== confirmPassword) { toast('New passwords do not match', 'error'); return; }
+  if (newPassword.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const res = await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+  if (res && res.message) {
+    toast('Password changed successfully! Please login again.', 'success');
+    closeModal('modal-change-pass');
+    $('cp-current').value = ''; $('cp-new').value = ''; $('cp-confirm').value = '';
+    setTimeout(doLogout, 2000);
+  } else toast(res?.error || 'Error changing password', 'error');
+}
+</script>
+function toWordsIN(num) {
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function inW(n) {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n/10)] + (n%10 ? ' '+a[n%10] : '');
+    if (n < 1000) return a[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' '+inW(n%100) : '');
+    if (n < 100000) return inW(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' '+inW(n%1000) : '');
+    return inW(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' '+inW(n%100000) : '');
+  }
+  return inW(num) + ' Rupees Only';
+}
+
+async function populatePayslipEmpSelect() {
+  const res = await api('/employees');
+  if (!res) return;
+  const sel = $('ps-emp-sel');
+  if (!sel) return;
+  sel.innerHTML = res.data.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+}
+
+async function loadFullPayslip() {
+  const empId = $('ps-emp-sel').value;
+  const month = $('ps-month-sel').value;
+  const year = $('ps-year-sel').value;
+  if (!empId) { toast('Select an employee', 'error'); return; }
+
+  $('ps-output').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';
+  $('ps-actions').style.display = 'none';
+
+  const [pRes, eRes] = await Promise.all([
+    api(`/payroll?employeeId=${empId}&month=${month}&year=${year}`),
+    api(`/employees/${empId}`)
+  ]);
+
+  if (!pRes || !pRes.data || !pRes.data[0]) {
+    $('ps-output').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">No payslip found for ${month} ${year}.<br><small>Generate payroll first from the Payroll section.</small></div>`;
+    return;
+  }
+
+  const p = pRes.data[0];
+  const emp = eRes ? (eRes.data || eRes) : {};
+  const esi = p.gross <= 21000 ? Math.round(p.gross * 0.0075) : 0;
+  const totalDed = (p.pf||0) + (p.pt||0) + (p.tds||0) + esi;
+  const netPay = p.gross - totalDed;
+
+  $('ps-output').innerHTML = `
+    <div class="ps-wrap" id="payslip-pdf-target">
+      <div class="ps-top">
+        <div class="ps-top-left">
+          <h3>Rise Next</h3>
+          <p>Human Resource Management · Hyderabad, Telangana</p>
+        </div>
+        <div class="ps-top-right">Pay Slip</div>
+      </div>
+      <div class="ps-gold-bar"></div>
+      <div class="ps-period-bar">
+        <div><span>Pay Period &nbsp;</span><strong>${month} ${year}</strong></div>
+        <div><span>Status &nbsp;</span><strong>${p.status || 'Generated'}</strong></div>
+        <div><span>Generated &nbsp;</span><strong>${new Date().toLocaleDateString('en-IN')}</strong></div>
+      </div>
+      <div class="ps-emp-grid">
+        <div class="ps-emp-field"><label>Employee Name</label><span>${emp.name || p.employeeName || empId}</span></div>
+        <div class="ps-emp-field"><label>Employee ID</label><span>${empId}</span></div>
+        <div class="ps-emp-field"><label>Department</label><span>${emp.department || '—'}</span></div>
+        <div class="ps-emp-field"><label>Designation</label><span>${emp.role || p.role || '—'}</span></div>
+        <div class="ps-emp-field"><label>Date of Joining</label><span>${emp.joinDate || '—'}</span></div>
+        <div class="ps-emp-field"><label>Working Days</label><span>26</span></div>
+      </div>
+      <div class="ps-cols">
+        <div class="ps-col-inner">
+          <div class="ps-col-title">Earnings</div>
+          <div class="ps-row2"><span class="lbl">Basic Salary</span><span class="amt">${fmtCurr(p.basic||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">House Rent Allowance</span><span class="amt">${fmtCurr(p.hra||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Conveyance Allowance</span><span class="amt">${fmtCurr(p.conveyance||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Special Allowance</span><span class="amt">${fmtCurr(p.special||0)}</span></div>
+          <div class="ps-row2 total-row"><span class="lbl">Gross Earnings</span><span class="amt">${fmtCurr(p.gross||0)}</span></div>
+        </div>
+        <div class="ps-col-inner">
+          <div class="ps-col-title">Deductions</div>
+          <div class="ps-row2"><span class="lbl">Provident Fund (12%)</span><span class="amt">${fmtCurr(p.pf||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">Professional Tax</span><span class="amt">${fmtCurr(p.pt||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">TDS / Income Tax</span><span class="amt">${fmtCurr(p.tds||0)}</span></div>
+          <div class="ps-row2"><span class="lbl">ESI (0.75%)</span><span class="amt">${fmtCurr(esi)}</span></div>
+          <div class="ps-row2 total-row"><span class="lbl">Total Deductions</span><span class="amt">${fmtCurr(totalDed)}</span></div>
+        </div>
+      </div>
+      <div class="ps-net-bar">
+        <div>
+          <div class="ps-net-label">Net Pay (Take Home)</div>
+          <div class="ps-net-words">${toWordsIN(netPay)}</div>
+        </div>
+        <div class="ps-net-amount">${fmtCurr(netPay)}</div>
+      </div>
+      <div class="ps-bank-bar">
+        <div class="ps-bank-item"><label>Bank Name</label><span>HDFC Bank</span></div>
+        <div class="ps-bank-item"><label>Account No.</label><span>XXXX XXXX 1234</span></div>
+        <div class="ps-bank-item"><label>IFSC Code</label><span>HDFC0001234</span></div>
+        <div class="ps-bank-item"><label>Payment Mode</label><span>NEFT / Bank Transfer</span></div>
+      </div>
+      <div class="ps-footer2">
+        <div>
+          <p>This is a system-generated payslip. For queries: hr@risenext.com</p>
+        </div>
+        <div class="ps-sig">
+          <div class="sig-line"></div>
+          <p>Authorised Signatory</p>
+          <p>Rise Next HR Dept</p>
+        </div>
+      </div>
+    </div>`;
+
+  $('ps-actions').style.display = 'flex';
+  toast('Payslip loaded!', 'success');
+}
+
+function downloadPayslipPDF() {
+  const el = document.getElementById('payslip-pdf-target');
+  if (!el) { toast('Generate payslip first', 'error'); return; }
+  const empName = $('ps-emp-sel').options[$('ps-emp-sel').selectedIndex].text.split('(')[0].trim();
+  const month = $('ps-month-sel').value;
+  const year = $('ps-year-sel').value;
+  html2pdf().set({
+    margin: 8,
+    filename: `Payslip_${empName}_${month}_${year}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(el).save();
+  toast('Downloading PDF...', 'success');
+}
+</script>
 async function loadAnnouncements() {
   const res = await api('/announcements');
   if (!res) return;
