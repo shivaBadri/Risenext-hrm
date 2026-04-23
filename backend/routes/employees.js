@@ -2,89 +2,46 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const { Employee } = require('../models');
 const auth = require('../middleware/auth');
 
-// GET /api/employees
-router.get('/', auth, (req, res) => {
+router.get('/', auth, async (req, res) => {
   const { department, status, search } = req.query;
-  let list = [...db.employees];
-
-  if (department && department !== 'All') {
-    list = list.filter(e => e.department === department);
-  }
-  if (status && status !== 'All') {
-    list = list.filter(e => e.status === status);
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    list = list.filter(e =>
-      e.name.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q) ||
-      e.role.toLowerCase().includes(q)
-    );
-  }
-
-  res.json({ data: list, total: list.length });
+  let query = {};
+  if (department) query.department = department;
+  if (status) query.status = status;
+  if (search) query.name = { $regex: search, $options: 'i' };
+  const data = await Employee.find(query).lean();
+  res.json({ data, total: data.length });
 });
 
-// GET /api/employees/:id
-router.get('/:id', auth, (req, res) => {
-  const emp = db.employees.find(e => e.id === req.params.id);
+router.get('/:id', auth, async (req, res) => {
+  const emp = await Employee.findOne({ id: req.params.id }).lean();
   if (!emp) return res.status(404).json({ error: 'Employee not found' });
   res.json({ data: emp });
 });
 
-// POST /api/employees
-router.post('/', auth, (req, res) => {
-  const { name, email, role, department, salary, phone, address } = req.body;
-
-  if (!name || !email || !role || !department || !salary) {
-    return res.status(400).json({ error: 'name, email, role, department and salary are required' });
-  }
-
-  const exists = db.employees.find(e => e.email === email);
-  if (exists) return res.status(409).json({ error: 'Employee with this email already exists' });
-
-  const newEmp = {
-    id: 'RN-' + String(db.employees.length + 1001).padStart(4, '0'),
-    name,
-    email,
-    role,
-    department,
-    salary: Number(salary),
-    joinDate: new Date().toISOString().split('T')[0],
-    status: 'Active',
-    phone: phone || '',
-    address: address || 'Hyderabad, Telangana'
-  };
-
-  db.employees.push(newEmp);
-  res.status(201).json({ data: newEmp, message: 'Employee added successfully' });
+router.post('/', auth, async (req, res) => {
+  const existing = await Employee.find().lean();
+  const lastNum = existing.reduce((max, e) => {
+    const n = parseInt(e.id.split('-')[1]) || 0;
+    return n > max ? n : max;
+  }, 1000);
+  const id = 'RN-' + (lastNum + 1);
+  const emp = await Employee.create({ id, ...req.body, joinDate: new Date().toISOString().split('T')[0], status: req.body.status || 'Active' });
+  res.status(201).json({ data: emp, message: 'Employee added' });
 });
 
-// PUT /api/employees/:id
-router.put('/:id', auth, (req, res) => {
-  const idx = db.employees.findIndex(e => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Employee not found' });
-
-  const allowed = ['name', 'email', 'role', 'department', 'salary', 'status', 'phone', 'address'];
-  allowed.forEach(field => {
-    if (req.body[field] !== undefined) {
-      db.employees[idx][field] = field === 'salary' ? Number(req.body[field]) : req.body[field];
-    }
-  });
-
-  res.json({ data: db.employees[idx], message: 'Employee updated successfully' });
+router.put('/:id', auth, async (req, res) => {
+  const emp = await Employee.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  if (!emp) return res.status(404).json({ error: 'Employee not found' });
+  res.json({ data: emp, message: 'Employee updated' });
 });
 
-// DELETE /api/employees/:id
-router.delete('/:id', auth, (req, res) => {
-  const idx = db.employees.findIndex(e => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Employee not found' });
-
-  db.employees.splice(idx, 1);
-  res.json({ message: 'Employee deleted successfully' });
+router.delete('/:id', auth, async (req, res) => {
+  const emp = await Employee.findOneAndDelete({ id: req.params.id });
+  if (!emp) return res.status(404).json({ error: 'Employee not found' });
+  res.json({ message: 'Employee deleted' });
 });
 
 module.exports = router;

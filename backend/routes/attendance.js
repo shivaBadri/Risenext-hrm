@@ -2,95 +2,56 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const { Attendance, Employee } = require('../models');
 const auth = require('../middleware/auth');
 
-// GET /api/attendance?date=YYYY-MM-DD
-router.get('/', auth, (req, res) => {
+router.get('/', auth, async (req, res) => {
   const { date, employeeId, month, year } = req.query;
-  let list = [...db.attendance];
-
-  if (date) list = list.filter(a => a.date === date);
-  if (employeeId) list = list.filter(a => a.employeeId === employeeId);
+  let query = {};
+  if (date) query.date = date;
+  if (employeeId) query.employeeId = employeeId;
   if (month && year) {
-    list = list.filter(a => {
-      const d = new Date(a.date);
-      return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
-    });
+    const m = String(month).padStart(2, '0');
+    query.date = { $regex: `^${year}-${m}` };
   }
-
-  // Enrich with employee name
-  const enriched = list.map(a => {
-    const emp = db.employees.find(e => e.id === a.employeeId);
-    return { ...a, employeeName: emp ? emp.name : 'Unknown', department: emp ? emp.department : '' };
-  });
-
+  const data = await Attendance.find(query).lean();
+  const enriched = await Promise.all(data.map(async a => {
+    const emp = await Employee.findOne({ id: a.employeeId }).lean();
+    return { ...a, employeeName: emp ? emp.name : 'Unknown' };
+  }));
   res.json({ data: enriched, total: enriched.length });
 });
 
-// POST /api/attendance/checkin
-router.post('/checkin', auth, (req, res) => {
-  const { employeeId } = req.body;
-  const today = new Date().toISOString().split('T')[0];
-  const time = new Date().toTimeString().slice(0, 5);
-
-  const exists = db.attendance.find(a => a.employeeId === employeeId && a.date === today);
-  if (exists) return res.status(409).json({ error: 'Already checked in today' });
-
-  const record = { id: uuidv4(), employeeId, date: today, checkIn: time, checkOut: null, status: 'Present' };
-  db.attendance.push(record);
-  res.status(201).json({ data: record, message: 'Checked in successfully' });
-});
-
-// PUT /api/attendance/checkout/:id
-router.put('/checkout/:id', auth, (req, res) => {
-  const idx = db.attendance.findIndex(a => a.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Attendance record not found' });
-
-  const time = new Date().toTimeString().slice(0, 5);
-  db.attendance[idx].checkOut = time;
-  res.json({ data: db.attendance[idx], message: 'Checked out successfully' });
-});
-
-// POST /api/attendance (manual mark)
-router.post('/', auth, (req, res) => {
-  const { employeeId, date, checkIn, checkOut, status } = req.body;
-  if (!employeeId || !date || !status) {
-    return res.status(400).json({ error: 'employeeId, date and status are required' });
-  }
-
-  const exists = db.attendance.find(a => a.employeeId === employeeId && a.date === date);
-  if (exists) return res.status(409).json({ error: 'Record already exists for this date' });
-
-  const record = { id: uuidv4(), employeeId, date, checkIn: checkIn || null, checkOut: checkOut || null, status };
-  db.attendance.push(record);
+router.post('/', auth, async (req, res) => {
+  const record = await Attendance.create({ id: uuidv4(), ...req.body });
   res.status(201).json({ data: record, message: 'Attendance marked' });
 });
 
-// GET /api/attendance/summary/:employeeId
-router.get('/summary/:employeeId', auth, (req, res) => {
+router.post('/checkin', auth, async (req, res) => {
+  const { employeeId } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  const existing = await Attendance.findOne({ employeeId, date: today });
+  if (existing) return res.status(400).json({ error: 'Already checked in today' });
+  const checkIn = new Date().toTimeString().slice(0, 5);
+  const record = await Attendance.create({ id: uuidv4(), employeeId, date: today, checkIn, status: 'Present' });
+  res.status(201).json({ data: record, message: 'Checked in successfully' });
+});
+
+router.put('/checkout/:id', auth, async (req, res) => {
+  const checkOut = new Date().toTimeString().slice(0, 5);
+  const record = await Attendance.findOneAndUpdate({ id: req.params.id }, { checkOut }, { new: true });
+  if (!record) return res.status(404).json({ error: 'Record not found' });
+  res.json({ data: record, message: 'Checked out successfully' });
+});
+
+router.get('/summary/:employeeId', auth, async (req, res) => {
   const { month, year } = req.query;
-  let records = db.attendance.filter(a => a.employeeId === req.params.employeeId);
-
-  if (month && year) {
-    records = records.filter(a => {
-      const d = new Date(a.date);
-      return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
-    });
-  }
-
-  const summary = {
-    present: records.filter(r => r.status === 'Present').length,
-    absent: records.filter(r => r.status === 'Absent').length,
-    leave: records.filter(r => r.status === 'Leave').length,
-    wfh: records.filter(r => r.status === 'WFH').length,
-    total: records.length
-  };
-  summary.percentage = summary.total > 0
-    ? Math.round((summary.present / summary.total) * 100)
-    : 0;
-
-  res.json({ data: summary, records });
+  const m = String(month).padStart(2, '0');
+  const records = await Attendance.find({ employeeId: req.params.employeeId, date: { $regex: `^${year}-${m}` } }).lean();
+  const present = records.filter(r => r.status === 'Present').length;
+  const absent = records.filter(r => r.status === 'Absent').length;
+  const leave = records.filter(r => r.status === 'Leave').length;
+  res.json({ data: { present, absent, leave, total: records.length } });
 });
 
 module.exports = router;

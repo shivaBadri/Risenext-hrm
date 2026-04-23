@@ -2,33 +2,22 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const { Announcement } = require('../models');
 const auth = require('../middleware/auth');
 
-router.get('/', auth, (req, res) => {
-  res.json({ data: db.announcements, total: db.announcements.length });
+router.get('/', auth, async (req, res) => {
+  const data = await Announcement.find().sort({ date: -1 }).lean();
+  res.json({ data, total: data.length });
 });
 
-router.post('/', auth, (req, res) => {
-  const { title, body, category } = req.body;
-  if (!title || !body) return res.status(400).json({ error: 'title and body are required' });
-
-  const ann = {
-    id: uuidv4(),
-    title,
-    body,
-    category: category || 'General',
-    author: req.user.name,
-    date: new Date().toISOString().split('T')[0]
-  };
-  db.announcements.unshift(ann);
+router.post('/', auth, async (req, res) => {
+  const ann = await Announcement.create({ id: uuidv4(), ...req.body, author: 'HR Admin', date: new Date().toISOString().split('T')[0] });
   res.status(201).json({ data: ann, message: 'Announcement posted' });
 });
 
-router.delete('/:id', auth, (req, res) => {
-  const idx = db.announcements.findIndex(a => a.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  db.announcements.splice(idx, 1);
+router.delete('/:id', auth, async (req, res) => {
+  const ann = await Announcement.findOneAndDelete({ id: req.params.id });
+  if (!ann) return res.status(404).json({ error: 'Not found' });
   res.json({ message: 'Deleted' });
 });
 
