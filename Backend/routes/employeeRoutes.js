@@ -24,11 +24,29 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// BULK ADD employees
+router.post("/bulk", async (req, res) => {
+  try {
+    const employees = req.body;
+    if (!Array.isArray(employees))
+      return res.status(400).json({ error: "Send an array of employees" });
+
+    const hashed = await bcrypt.hash("Employee@123", 10);
+    const docs = employees.map(({ name, email, role, salary, department }) => ({
+      name, email, role, salary, department, password: hashed
+    }));
+
+    const inserted = await Employee.insertMany(docs);
+    res.json({ message: `${inserted.length} employees added successfully` });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ADD employee
 router.post("/", async (req, res) => {
   try {
     const { name, email, role, salary, department, password } = req.body;
-    // Hash password if provided, else use default
     const hashed = password
       ? await bcrypt.hash(password, 10)
       : await bcrypt.hash("Employee@123", 10);
@@ -46,7 +64,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const update = { ...req.body };
-    delete update.password; // don't allow password update here
+    delete update.password;
     const emp = await Employee.findByIdAndUpdate(req.params.id, update, { new: true }).select("-password");
     if (!emp) return res.status(404).json({ error: "Employee not found" });
     res.json(emp);
